@@ -109,22 +109,28 @@ description +
 ### Step 10
 Run the application. You should see a screen similar to the following:
 
+![alt text](pizza_agna/images/lab1/7.png)
 
 The image is a screenshot of a list of items fetched over HTTP, showing a ListView with the pizza name and its description.
 
-Question 1
+- Question 1
 Add your nickname to titlethe app as an identity for your work.
 Change the application theme color according to your preference.
 Capture the results of your application, then enter it into the report in the README and commit the results of the answer to Question 1 with the message "W14: Answer to Question 1"
+
+![alt text](pizza_agna/images/lab1/7.png)
+
+
 We currently only have one method that uses the HttpHelper class. As our application grows, we may need to call HttpHelper multiple times in different parts of the application, and it would be a waste of resources to create multiple instances of the class each time we need to use a method from that class.
 
 One way to avoid this is to use a factory constructor and the singleton pattern: this ensures you only instantiate a class once. This is useful whenever only one object is needed in your application and when you need to access resources you want to share across applications.
 
 In the file httphelper.dart, add the following code to the class HttpHelper, just below the declaration:
-
+```dart:
 static final HttpHelper _httpHelper = HttpHelper._internal();
 HttpHelper._internal();
 factory HttpHelper() {
     return _httpHelper;
 }
+```
 There are several patterns in Dart and Flutter that allow you to share services and business logic across your apps, and the singleton pattern is just one of them. Other options include Dependency Injection, Inherited Widgets, and Provider and Service Locators. There's an interesting article about the different options available in Flutter at http://bit.ly/flutter_DI

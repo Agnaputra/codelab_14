@@ -6,7 +6,7 @@ import 'pizza.dart'; // Asumsi model Pizza ada di sini
 class HttpHelper {
   // PERHATIKAN: Ganti '0222g.mocklab.io' dengan authority
   // dari mock service Anda di WireMock Cloud!
-  final String authority = '0222g.mocklab.io'; 
+  final String authority = 'zvy8d.wiremockapi.cloud'; 
   final String path = 'pizzalist';
 
   Future<List<Pizza>> getPizzaList() async {
