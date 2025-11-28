@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'httphelper.dart'; 
 import 'pizza.dart'; 
-import 'pizza_detail.dart'; // ✅ IMPORT FILE BARU
+import 'pizza_detail.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -12,11 +12,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Q1: Set tema aplikasi (contoh: deep purple)
     return MaterialApp(
       title: 'Pizza List Fetcher',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple), // Ubah warna ini
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple), 
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'JSON'),
@@ -34,9 +33,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // Method 8: Memanggil HttpHelper.getPizzaList()
+  HttpHelper helper = HttpHelper(); 
+  
+  // Fungsi untuk memuat ulang data dari server
   Future<List<Pizza>> callPizzas() async {
-    HttpHelper helper = HttpHelper(); 
     List<Pizza> pizzas = await helper.getPizzaList();
     return pizzas;
   }
@@ -47,7 +47,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        // Q1: Ganti title dengan nickname Anda
         title: const Text('JSON by [Agna]'), 
         backgroundColor: appBarColor, 
       ),
@@ -65,26 +64,42 @@ class _MyHomePageState extends State<MyHomePage> {
           return ListView.builder(
             itemCount: snapshot.data!.length, 
             itemBuilder: (BuildContext context, int position) {
-              final pizza = snapshot.data![position];
+              final Pizza currentPizza = snapshot.data![position];
               return ListTile(
-                title: Text(pizza.pizzaName),
+                title: Text(currentPizza.pizzaName),
                 subtitle: Text(
-                  '${pizza.description} - €${pizza.price?.toStringAsFixed(2)}',
+                  '${currentPizza.description} - €${currentPizza.price?.toStringAsFixed(2) ?? 'N/A'}',
                 ),
+                // ✅ onTap untuk EDIT (PUT)
+                onTap: () {
+                   Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                         builder: (context) => PizzaDetailScreen(
+                            pizza: currentPizza, // Teruskan objek pizza yang ada
+                            isNew: false)),      // Set isNew = false
+                    );
+                },
               );
             },
           );
         },
       ),
       
-      // ✅ FloatingActionButton untuk navigasi ke layar POST
+      // ✅ FloatingActionButton untuk TAMBAH BARU (POST)
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => const PizzaDetailScreen()),
+                builder: (context) => PizzaDetailScreen(
+                      pizza: Pizza(
+                        pizzaName: '', 
+                        description: '',
+                      ), 
+                      isNew: true, // Set isNew = true
+                    )),
           );
         },
       ),

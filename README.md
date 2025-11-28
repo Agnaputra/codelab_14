@@ -348,5 +348,128 @@ After creating the POST stub in Wiremock, we create the postPizza method to actu
 - Question 2
 Add new fields in JSON or POST to Wiremock!
 Capture your application results as a GIF in the README and commit the answer to Question 2 with the message "W14: Answer to Question 2"
-![alt text](pizza_agna/images/lab2/4.png)
+![alt text](pizza_agna/images/lab2/5.gif)
 
+## Practical 3: Updating Data in Web Service (PUT)
+
+### Step 1
+Log in to the Wiremock service at https://app.wiremock.cloud and click on the Stubs section of the example API. Then, create a new stub.
+
+![alt text](pizza_agna/images/lab2/1.png)
+
+### Step 2
+Complete the request as follows:
+Name: Put Pizza
+Verb: PUT
+Address: /pizza
+Status: 200
+Body Type: json
+Body: {"message": "Pizza was updated"}
+
+![alt text](pizza_agna/images/lab3/1.png)
+
+Screenshot of the WireMock Put Pizza stub, showing the stub configuration with name, PUT verb, path, status 200, and JSON response body.
+
+### Step 3
+Click the Save button.
+
+![alt text](pizza_agna/images/lab2/3.png)
+
+### Step 4
+In your Flutter project, add a putPizza method to the HttpHelper class in the http_helper.dart file:
+```dart:
+Future<String> putPizza(Pizza pizza) async {
+  const putPath = '/pizza';
+  String put = json.encode(pizza.toJson());
+  Uri url = Uri.https(authority, putPath);
+  http.Response r = await http.put(
+    url,
+    body: put,
+  );
+  return r.body;
+}
+```
+
+### Step 5
+In the PizzaDetailScreen class in the pizza_detail.dart file, add two properties, a Pizza and a boolean, and in the constructor, set both properties:
+```dart:
+final Pizza pizza;
+final bool isNew;
+const PizzaDetailScreen(
+    {super.key, required this.pizza, required this.isNew});
+```
+
+### Step 6
+In the PizzaDetailScreenState class, override the initState method. When the isNew property of the PizzaDetail class is not new, it sets the TextField content to the values ​​of the passed Pizza object:
+```dart:
+@override
+void initState() {
+  if (!widget.isNew) {
+    txtId.text = widget.pizza.id.toString();
+    txtName.text = widget.pizza.pizzaName;
+    txtDescription.text = widget.pizza.description;
+    txtPrice.text = widget.pizza.price.toString();
+    txtImageUrl.text = widget.pizza.imageUrl;
+  }
+  super.initState();
+}
+```
+
+### Step  7
+Edit the savePizza method so that it calls the helper.postPizza method when isNew is true, and helper.putPizza when it is false:
+```dart:
+Future savePizza() async {
+...
+    final result = await (widget.isNew
+  ? helper.postPizza(pizza)
+  : helper.putPizza(pizza));    
+  setState(() {
+      operationResult = result;
+    });
+  }
+```
+
+### Step 8
+In the main.dart file, in the build method of _MyHomePageState, add an onTap property to the ListTile so that when the user taps it, the app will reroute and display the PizzaDetail screen, passing in the current pizza and false for the isNew parameter:
+```dart:
+return ListTile(
+    title: Text(pizzas.data![position].pizzaName),
+    subtitle: Text(pizzas.data![position].description +
+                  ' - € ' +
+                  pizzas.data![position].price.toString()),
+    onTap: () {
+       Navigator.push(
+          context,
+          MaterialPageRoute(
+             builder: (context) => PizzaDetailScreen(
+                pizza: pizzas.data![position], isNew: false)),
+    );
+```
+### Step 9
+In the floatingActionButton, pass the new Pizza and true for the isNew parameter to the PizzaDetail route:
+```dart:
+floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => PizzaDetailScreen(
+                        pizza: Pizza(),
+                        isNew: true,
+                      )),            
+           );
+      }),
+);
+```
+
+### Step 10
+Run the app. On the main screen, tap any Pizza to navigate to the PizzaDetail route.
+
+### Step 11
+Edit the pizza details in the text field and press the Save button. You should see a message indicating that the pizza details have been updated.
+
+
+- Question 3
+Change one of the data with your Name and NIM, then see the results in Wiremock.
+Capture your application results as a GIF in the README and commit the answer to Question 3 with the message "W14: Answer to Question 3"

@@ -1,31 +1,52 @@
 import 'package:flutter/material.dart';
 import 'pizza.dart';
 import 'httphelper.dart';
-import 'dart:convert'; // Untuk mengurai respons POST
+import 'dart:convert';
 
 class PizzaDetailScreen extends StatefulWidget {
-  const PizzaDetailScreen({super.key});
+  // ✅ Properti baru
+  final Pizza pizza;
+  final bool isNew;
+
+  // ✅ Constructor baru
+  const PizzaDetailScreen(
+      {super.key, required this.pizza, required this.isNew}); 
 
   @override
   State<PizzaDetailScreen> createState() => _PizzaDetailScreenState();
 }
 
 class _PizzaDetailScreenState extends State<PizzaDetailScreen> {
-  // Controllers untuk 5 fields
   final TextEditingController txtId = TextEditingController();
   final TextEditingController txtName = TextEditingController();
   final TextEditingController txtDescription = TextEditingController();
   final TextEditingController txtPrice = TextEditingController();
   final TextEditingController txtImageUrl = TextEditingController();
   
-  // State untuk field baru (Pertanyaan 2)
   bool isVegetarian = false; 
-
   String operationResult = '';
 
+  // ✅ Override initState
+  @override
+  void initState() {
+    if (!widget.isNew) {
+      // Jika mode EDIT (PUT): isi field dengan data pizza lama
+      txtId.text = widget.pizza.id?.toString() ?? '';
+      txtName.text = widget.pizza.pizzaName;
+      txtDescription.text = widget.pizza.description;
+      txtPrice.text = widget.pizza.price?.toString() ?? '';
+      txtImageUrl.text = widget.pizza.imageUrl ?? '';
+      isVegetarian = widget.pizza.isVegetarian;
+    } else {
+      // Jika mode ADD NEW (POST): set nilai default
+      txtId.text = '';
+      isVegetarian = false;
+    }
+    super.initState();
+  }
+  
   @override
   void dispose() {
-    // Disposal controller untuk mencegah memory leaks
     txtId.dispose();
     txtName.dispose();
     txtDescription.dispose();
@@ -34,32 +55,32 @@ class _PizzaDetailScreenState extends State<PizzaDetailScreen> {
     super.dispose();
   }
 
-  // Metode POST
-  Future postPizza() async {
+  // ✅ savePizza() dengan logika kondisional
+  Future savePizza() async {
     HttpHelper helper = HttpHelper();
     
-    // 1. Membuat objek Pizza dari input UI
+    // 1. Buat objek Pizza dari input UI
     Pizza pizza = Pizza(
-      id: int.tryParse(txtId.text),
+      id: int.tryParse(txtId.text), 
       pizzaName: txtName.text,
       description: txtDescription.text,
       price: double.tryParse(txtPrice.text),
       imageUrl: txtImageUrl.text,
-      isVegetarian: isVegetarian, // Memasukkan data field baru
+      isVegetarian: isVegetarian, 
     );
 
-    // 2. Memanggil metode postPizza dari HttpHelper
-    String result = await helper.postPizza(pizza);
+    // 2. Tentukan apakah POST atau PUT
+    final result = await (widget.isNew
+        ? helper.postPizza(pizza) // POST jika isNew = true
+        : helper.putPizza(pizza));  // PUT jika isNew = false
     
-    // 3. Memperbarui UI dengan hasil POST
+    // 3. Perbarui UI dengan hasil
     setState(() {
       try {
-        // Mencoba mengurai respons JSON untuk mendapatkan pesan yang bersih
         final jsonResult = json.decode(result);
         operationResult = jsonResult['message'] ?? result;
       } catch (e) {
-        // Fallback jika respons bukan JSON
-        operationResult = result; 
+        operationResult = result;
       }
     });
   }
@@ -68,7 +89,7 @@ class _PizzaDetailScreenState extends State<PizzaDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pizza Detail'),
+        title: Text(widget.isNew ? 'New Pizza' : 'Edit Pizza'), 
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Padding(
@@ -77,49 +98,51 @@ class _PizzaDetailScreenState extends State<PizzaDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // Tampilkan hasil POST (misalnya: "The pizza was posted")
               Text(
                 operationResult,
                 style: TextStyle(
-                    backgroundColor: Colors.green[200],
+                    backgroundColor: operationResult.contains('updated') || operationResult.contains('posted') ? Colors.green[200] : Colors.grey[200],
                     color: Colors.black),
               ),
               const SizedBox(height: 24),
-
-              // TextFields untuk input
+              
+              // Field ID: Penting untuk PUT
               TextField(
                 controller: txtId,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(hintText: 'Insert ID'),
+                enabled: !widget.isNew, // ID biasanya tidak bisa diubah saat edit
+                decoration: InputDecoration(
+                  hintText: 'Insert ID',
+                  labelText: 'ID (Wajib untuk Edit)',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 24),
               TextField(
                 controller: txtName,
-                decoration: const InputDecoration(hintText: 'Insert Pizza Name'),
+                decoration: const InputDecoration(hintText: 'Insert Pizza Name', labelText: 'Pizza Name', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 24),
               TextField(
                 controller: txtDescription,
-                decoration: const InputDecoration(hintText: 'Insert Description'),
+                decoration: const InputDecoration(hintText: 'Insert Description', labelText: 'Description', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 24),
               TextField(
                 controller: txtPrice,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(hintText: 'Insert Price'),
+                decoration: const InputDecoration(hintText: 'Insert Price', labelText: 'Price', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 24),
               TextField(
                 controller: txtImageUrl,
-                decoration: const InputDecoration(hintText: 'Insert Image Url'),
+                decoration: const InputDecoration(hintText: 'Insert Image Url', labelText: 'Image URL', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 24),
-              
-              // 🔥 UI untuk field baru (isVegetarian)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Is Vegetarian? (Q2)'),
+                  const Text('Is Vegetarian?'),
                   Switch(
                     value: isVegetarian,
                     onChanged: (bool value) {
@@ -132,10 +155,10 @@ class _PizzaDetailScreenState extends State<PizzaDetailScreen> {
               ),
               const SizedBox(height: 48),
 
-              // Button POST
+              // Tombol yang memanggil savePizza()
               ElevatedButton(
-                onPressed: postPizza,
-                child: const Text('Send Post'),
+                onPressed: savePizza,
+                child: Text(widget.isNew ? 'Send Post' : 'Save Update'),
               ),
             ],
           ),
