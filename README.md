@@ -466,10 +466,76 @@ floatingActionButton: FloatingActionButton(
 ### Step 10
 Run the app. On the main screen, tap any Pizza to navigate to the PizzaDetail route.
 
+![alt text](pizza_agna/images/lab3/2.png)
+
 ### Step 11
 Edit the pizza details in the text field and press the Save button. You should see a message indicating that the pizza details have been updated.
 
+![alt text](pizza_agna/images/lab3/3.png)
 
 - Question 3
 Change one of the data with your Name and NIM, then see the results in Wiremock.
 Capture your application results as a GIF in the README and commit the answer to Question 3 with the message "W14: Answer to Question 3"
+
+![alt text](pizza_agna/images/lab3/4.gif)
+
+
+## Practical 4: Deleting Data from Web Service (DELETE)
+
+### Step 1
+Log in to the Wiremock service at https://app.wiremock.cloud and click on the Stubs section of the example API. Then, create a new stub.
+
+![alt text](pizza_agna/images/lab1/2.png)
+
+### Step 2
+Complete the request with the following data:
+Name: Delete Pizza
+Verb: DELETE
+Address: /pizza
+Status: 200
+Body Type: json
+Body: {"message": "Pizza was deleted"}
+![alt text](pizza_agna/images/lab4/1.png)
+
+### Step 3
+Save new stub.
+![alt text](pizza_agna/images/lab2/3.png)
+
+### Step 4
+In the Flutter project, add a deletePizza method to the HttpHelper class in the http_helper.dart file:
+```dart:
+Future<String> deletePizza(int id) async {
+  const deletePath = '/pizza';
+  Uri url = Uri.https(authority, deletePath);
+  http.Response r = await http.delete(
+    url,
+  );
+  return r.body;
+}
+```
+
+### Step 5
+In the main.dart file, in the build method of the _MyHomePageState class, refactor the itemBuilder of ListView.builder so that the ListTile is contained in the Dismissible widget, as follows:
+```dart:
+return ListView.builder(
+    itemCount: (pizzas.data == null) ? 0 : pizzas.data.length,
+    itemBuilder: (BuildContext context, int position) {
+        return Dismissible(
+                    key: Key(position.toString()),
+                    onDismissed: (item) {
+                      HttpHelper helper = HttpHelper();
+                      pizzas.data!.removeWhere(
+                          (element) => element.id == pizzas.data![position].id);
+                      helper.deletePizza(pizzas.data![position].id!);
+                    },
+                    child: ListTile(...
+```
+
+### Step 6
+Run the application. When you swipe any element from the pizza list, the ListTile will disappear.
+![alt text](pizza_agna/images/lab4/2.png)
+
+- Question 4
+Capture your application results as a GIF in the README and commit the answer to Question 4 with the message "W14: Answer to Question 4"
+
+![alt text](pizza_agna/images/lab4/3.gif)

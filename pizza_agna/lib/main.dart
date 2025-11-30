@@ -34,11 +34,20 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   HttpHelper helper = HttpHelper(); 
-  
-  // Fungsi untuk memuat ulang data dari server
-  Future<List<Pizza>> callPizzas() async {
-    List<Pizza> pizzas = await helper.getPizzaList();
-    return pizzas;
+  // ✅ State untuk menyimpan Future agar dapat dimuat ulang
+  late Future<List<Pizza>> _pizzasFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _pizzasFuture = helper.getPizzaList(); // Inisialisasi Future
+  }
+
+  // Metode untuk memuat ulang data (dipanggil setelah DELETE)
+  void _refreshList() {
+    setState(() {
+      _pizzasFuture = helper.getPizzaList(); // Muat ulang Future
+    });
   }
 
   @override
@@ -51,308 +60,93 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: appBarColor, 
       ),
       body: FutureBuilder<List<Pizza>>(
-        future: callPizzas(),
+        // ✅ Gunakan Future dari state
+        future: _pizzasFuture,
         builder: (BuildContext context, AsyncSnapshot<List<Pizza>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
           if (snapshot.hasError) {
             return const Center(child: Text('Something went wrong'));
           }
 
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+             return const Center(child: Text('No pizzas found.'));
           }
+          
+          // Data yang akan dimanipulasi secara visual
+          final List<Pizza> pizzas = snapshot.data!;
 
           return ListView.builder(
-            itemCount: snapshot.data!.length, 
+            itemCount: pizzas.length, 
             itemBuilder: (BuildContext context, int position) {
-              final Pizza currentPizza = snapshot.data![position];
-              return ListTile(
-                title: Text(currentPizza.pizzaName),
-                subtitle: Text(
-                  '${currentPizza.description} - €${currentPizza.price?.toStringAsFixed(2) ?? 'N/A'}',
+              final Pizza currentPizza = pizzas[position];
+              
+              // ✅ Implementasi Dismissible (Praktikum 4)
+              return Dismissible(
+                // Gunakan ID unik sebagai Key
+                key: Key(currentPizza.id?.toString() ?? currentPizza.pizzaName), 
+                direction: DismissDirection.startToEnd, // Contoh: geser dari kiri ke kanan
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.only(left: 20.0),
+                  child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                // ✅ onTap untuk EDIT (PUT)
-                onTap: () {
-                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                         builder: (context) => PizzaDetailScreen(
-                            pizza: currentPizza, // Teruskan objek pizza yang ada
-                            isNew: false)),      // Set isNew = false
-                    );
+                onDismissed: (direction) async {
+                  // 1. Panggil service DELETE ke server Mock
+                  HttpHelper helper = HttpHelper();
+                  if (currentPizza.id != null) {
+                    await helper.deletePizza(currentPizza.id!);
+                  }
+                  
+                  // 2. Hapus item dari list lokal secara visual (diperlukan untuk Dismissible)
+                  // Note: Ini dilakukan di tingkat UI. List nyata akan di-refresh.
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${currentPizza.pizzaName} dismissed (API DELETE called)')));
+                  
+                  // 3. Muat ulang daftar setelah item di-dismiss
+                  _refreshList(); 
                 },
+                
+                // Child: ListTile yang sudah ada
+                child: ListTile(
+                  title: Text(currentPizza.pizzaName),
+                  subtitle: Text(
+                    '${currentPizza.description} - €${currentPizza.price?.toStringAsFixed(2) ?? 'N/A'}',
+                  ),
+                  onTap: () {
+                     Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                           builder: (context) => PizzaDetailScreen(
+                              pizza: currentPizza, 
+                              isNew: false)),      
+                      ).then((_) => _refreshList()); // Refresh list setelah kembali dari detail
+                  },
+                ),
               );
             },
           );
         },
       ),
       
-      // ✅ FloatingActionButton untuk TAMBAH BARU (POST)
+      // FloatingActionButton untuk Tambah Baru
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
           Navigator.push(
-            context,............................
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
+            context,
             MaterialPageRoute(
                 builder: (context) => PizzaDetailScreen(
                       pizza: Pizza(
                         pizzaName: '', 
                         description: '',
                       ), 
-                      isNew: true, // Set isNew = true
+                      isNew: true,
                     )),
-          );
+          ).then((_) => _refreshList()); // Refresh list setelah kembali dari detail
         },
       ),
     );

@@ -14,7 +14,7 @@ class HttpHelper {
   }
   HttpHelper._internal() {}
 
-  // ... (Metode getPizzaList() tetap sama) ...
+  // Metode GET
   Future<List<Pizza>> getPizzaList() async {
     final Uri url = Uri.https(authority, path);
     final http.Response result = await http.get(url);
@@ -30,7 +30,7 @@ class HttpHelper {
     }
   }
 
-  // Metode POST (Praktikum 2)
+  // Metode POST
   Future<String> postPizza(Pizza pizza) async {
     const postPath = '/pizza';
     String post = json.encode(pizza.toJson()); 
@@ -46,18 +46,30 @@ class HttpHelper {
     return r.body; 
   }
 
-  // ✅ Metode PUT (Praktikum 3)
+  // Metode PUT
   Future<String> putPizza(Pizza pizza) async {
     const putPath = '/pizza';
     String put = json.encode(pizza.toJson());
     Uri url = Uri.https(authority, putPath);
     
-    http.Response r = await http.put( // Menggunakan http.put
+    http.Response r = await http.put(
       url,
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: put,
+    );
+    return r.body;
+  }
+  
+  // ✅ Metode DELETE (Praktikum 4)
+  Future<String> deletePizza(int id) async {
+    // Catatan: Dalam API REST nyata, path biasanya /pizza/{id}
+    const deletePath = '/pizza'; 
+    Uri url = Uri.https(authority, deletePath);
+    
+    http.Response r = await http.delete( // Menggunakan http.delete
+      url,
     );
     return r.body;
   }
